@@ -15,6 +15,7 @@ import java.awt.TextField;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import static java.sql.Types.DOUBLE;
 import java.text.SimpleDateFormat;
@@ -870,7 +871,15 @@ public class InvoiceManager extends javax.swing.JPanel {
     
    
     private void jButtonPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrintActionPerformed
-        Connection con;
+        
+        Connection          con                 = null;
+        PreparedStatement   invoicePs           = null;
+        PreparedStatement   invoiceRecordPs     = null;
+        
+        List<PreparedStatement> psList          = new ArrayList<PreparedStatement>();
+        
+        String      invoiceQuery = "INSERT INTO invoice (invoice_number, invoice_date, customer_name, contact_number, address, total_amount, invoice_type) " +
+                                   "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         String invoice_number=jTextFieldlInvoiceNumber1.getText();
         Date invoice_date=jDateChooserInDate.getDate();
@@ -889,108 +898,128 @@ public class InvoiceManager extends javax.swing.JPanel {
         
     
         try {
+            
             con = DB.getCon(); //get data from database
             
-            //start a transaction
-            
             con.setAutoCommit(false);
-            String sql_Invoice = "INSERT INTO invoice (invoice_number, invoice_date, customer_name, contact_number, address, total_amount,invoice_type)\n" +
-            "VALUES ('" + invoice_number + "','" + new java.sql.Date( invoice_date.getTime() ) + "','" + customer_name + "','" + contact_number + "','" + address + "'," + total_amount + ",1)";
-          
-            String sql_getInvoiceId="SELECT id FROM phone_house.invoice i where invoice_number="+ invoice_number ;
             
-            System.out.println(sql_Invoice);
+            invoicePs = con.prepareStatement(invoiceQuery, Statement.RETURN_GENERATED_KEYS);
             
+            invoicePs.setString(1, invoice_number);
+            invoicePs.setDate(2, new java.sql.Date(invoice_date.getTime()));
+            invoicePs.setString(3, customer_name);
+            invoicePs.setString(4, contact_number);
+            invoicePs.setString(5, address);
+            invoicePs.setDouble(6, total_amount);
+            invoicePs.setInt(7, 1);
             
-            Statement stmt = con.createStatement();
-            stmt.addBatch(sql_Invoice);
+            psList.add(invoicePs);
             
-
-            for (int i=0; i<jTable1.getRowCount(); i++)
+            invoicePs.executeUpdate(); // Query is not yet commited
+            
+            ResultSet generatedKeys = invoicePs.getGeneratedKeys();
+            
+            if (generatedKeys.next()) {
+                
+                Integer insertedInvoiceId = generatedKeys.getInt(1);
+                
+                for (int i=0; i<jTable1.getRowCount(); i++) {
+                    
+                    String no = (String) jTable1.getValueAt(i, 0);
+                    String description = (String) jTable1.getValueAt(i, 1);
+                    int quantityJTable1 = Integer.parseInt(((String) jTable1.getValueAt(i, 2)) );
+                    double unit_priceJTable1 = Double.parseDouble((String) jTable1.getValueAt(i, 3));
+                    Double amount = (Double) jTable1.getValueAt(i, 4);
+                    String warranty = (String) jTable1.getValueAt(i, 5);
+                    String IMEI_number = (String) jTable1.getValueAt(i, 6);
+                    String model_JTable = (String) jTable1.getValueAt(i, 7);
+                    String Brand_JTable = (String) jTable1.getValueAt(i, 8);
+                    String item_Name_JTable = (String) jTable1.getValueAt(i, 9);
+                    String Category_id_JTable = (String) jTable1.getValueAt(i, 10);
+                    int category_id1=jComboBoxCategory.getSelectedIndex();
+                    
+                    String phone = "Phones";
+                    String item=Category_id_JTable;
+                    String phoneRecordQuery =null;
+                    String invoiceRecordQuery;
+                    
+                    if (phone.equals(item)) {
+                        
+                        // TODO
+                        
+                    } else {
+                        
+                        invoiceRecordQuery = "INSERT INTO invoice_record(invoice_id, item_nmber, category, item_name, unit_price, quantity, warranty_type_code) " +
+                                            "values(?, ?, ?, ?, ?, ?, ?)";
+                        
+                        invoiceRecordPs = con.prepareStatement(invoiceRecordQuery);
+                        
+                        invoiceRecordPs.setInt(1, insertedInvoiceId);
+                        invoiceRecordPs.setString(2, no);
+                        invoiceRecordPs.setString(3, String.valueOf(category_id));
+                        invoiceRecordPs.setString(4, String.valueOf(category_id1));
+                        invoiceRecordPs.setDouble(5, unit_priceJTable1);
+                        invoiceRecordPs.setInt(6, quantityJTable1);
+                        invoiceRecordPs.setString(7, String.valueOf(warranty_type_code));
+                        
+                        psList.add(invoiceRecordPs);
+                        
+                        invoiceRecordPs.executeUpdate(); // Query is not yet commited
+                    }
+                }
+                
+                con.commit(); // Commit all changes
+                
+                jTextFieldInvoiceNumber.setText("");
+                jTextFieldCusName.setText("");
+                jTextFieldInvoiceAddress.setText("");
+                jTextFieldInvoiceContact.setText("");
+                
+            } else {
+                
+                throw new RuntimeException("Invoice is not updted");
+                
+            }
+        
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            // Roll back all the changes with above queries
+            if (con != null)
             {
-                String no = (String) jTable1.getValueAt(i, 0);
-                String description = (String) jTable1.getValueAt(i, 1);
-                int quantityJTable1 = Integer.parseInt(((String) jTable1.getValueAt(i, 2)) );
-                double unit_priceJTable1 = Double.parseDouble((String) jTable1.getValueAt(i, 3));
-                Double amount = (Double) jTable1.getValueAt(i, 4);
-                String warranty = (String) jTable1.getValueAt(i, 5);
-                //String item_code = jTable1.getValueAt(i, 11).toString();
-                String IMEI_number = (String) jTable1.getValueAt(i, 6);
-                String model_JTable = (String) jTable1.getValueAt(i, 7);
-                String Brand_JTable = (String) jTable1.getValueAt(i, 8);
-                //Double category_id2 = (Double) jTable1.getValueAt(i, 10);
+                try {
+                    con.rollback();
+                }
+                catch (SQLException ex) {
+                    // Roll back messed up
+                    ex.printStackTrace();
+                }
                 
-//                System.out.println("--------" + i);
-                
-                String item_Name_JTable = (String) jTable1.getValueAt(i, 9);
-                String Category_id_JTable = (String) jTable1.getValueAt(i, 10);
-                int category_id1=jComboBoxCategory.getSelectedIndex();
-               
-//                System.out.println(no+" "+description+" "+quantityJTable1+" "+unit_priceJTable1+" "+amount+" "+warranty+" "+IMEI_number+" "+model_JTable+" "+Brand_JTable+" "+item_Name_JTable+" "+Category_id_JTable);
-//                 System.out.println( invoice_number + " " + no + " "+ category_id +" " + category_id1+ " " +unit_priceJTable1 + " " + quantityJTable1+ " "+ warranty_type_code+" "+1);
-//                System.out.println("*************************************");
-//                 System.out.println(category_id1);
-                 
-                
-        String phone = "Phones";
-        String item=Category_id_JTable;
-        String phoneRecordQuery =null;
-        String invoiceRecordQuery=null;
-        
-        
-                System.out.println(item);
-                System.out.println(phone);
+            }
             
-        
-        if(phone.equals(item)){
+        }
+        catch (Exception e) {
             
-            System.out.println("this is if.............");
-            phoneRecordQuery = "SELECT id FROM phone_house.phone  where imei_number="+IMEI_number;
-            //( imei_number, model_id, status_code) values('" + IMEI_number + "',2,'sold')";
+            // Something is not correctly handle
+            e.printStackTrace();
             
-            invoiceRecordQuery = "insert into invoice_record( invoice_id, item_nmber, category_id,item_id,unit_price,quantity,warranty_type_code,phone_id) values((" + sql_getInvoiceId + "),'" + " " + "','"+ category_id +"','" + "',' 5 ','" +unit_priceJTable1 + "',' 1 ','"+ warranty_type_code+"',("+phoneRecordQuery+"))";
-             
-            System.out.println("******************");
-            System.out.println(invoiceRecordQuery);
-               
-        }else{
-            invoiceRecordQuery = "insert into invoice_record( invoice_id, item_nmber, category_id,item_id,unit_price,quantity,warranty_type_code) values((" + sql_getInvoiceId + "),'" + no + "','"+ category_id +"','" + category_id1 + "','" +unit_priceJTable1 + "','" + quantityJTable1+ "','"+ warranty_type_code+"')";
+        }
+        finally {
+            // Okay, now we close all the PreparedStatements
+            try {
+                for (PreparedStatement ps : psList) {
+                    ps.close();
+                }
+            }
+            catch (SQLException e) {
+                // Something is not correctly handle
+                e.printStackTrace();
+            }
             
         }
         
-            System.out.println("INVOICE Record query : " + invoiceRecordQuery);
-        
-        stmt.addBatch(invoiceRecordQuery);
-        
-       
-                   }
-            
-            // Update invoice table set totle = xxx where id= invoiceid(inv)
-             
-            int[] results = stmt.executeBatch();
-            
-        
-        con.commit();
-        con.rollback();
-       // PreparedStatement ps=con.prepareStatement(sql);
-        
-    
-        
-        
-        //ps.executeUpdate();
-        
-        jTextFieldInvoiceNumber.setText("");
-        jTextFieldCusName.setText("");
-        jTextFieldInvoiceAddress.setText("");
-        jTextFieldInvoiceContact.setText("");
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }//GEN-LAST:event_jButtonPrintActionPerformed
 
-
-       
     
     
     public void selectCategory(){
