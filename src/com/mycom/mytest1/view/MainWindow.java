@@ -6,6 +6,14 @@
 
 package com.mycom.mytest1.view;
 
+import com.mysql.jdbc.log.LogFactory;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+
+
+
 /**
  *
  * @author kaushika
@@ -19,6 +27,8 @@ public class MainWindow extends javax.swing.JFrame {
         initComponents();
     }
 
+  static Logger logger=Logger.getLogger(MainWindow.class);
+ // private static final Logger logger=LogFactory.getLogger(MainWindow.class);
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -230,29 +240,26 @@ public class MainWindow extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    
+      	static FileHandler fileTxt;
+    public static void main(String args[]) throws IOException {
+     
+        BasicConfigurator.configure();
+        
+        fileTxt =new FileHandler("F:\\Project\\1EMS\\myTest1\\src\\projectlog.log");
+        logger.info("Logeer info********************");
+			if(logger.isDebugEnabled()){
+			logger.debug("This is debug : ");
+		}
+		
+		if(logger.isInfoEnabled()){
+			logger.info("This is info : " );
+		}
+		
+		logger.warn("This is warn : " );
+		logger.error("This is error : " );
+		logger.fatal("This is fatal : " );
+	
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {

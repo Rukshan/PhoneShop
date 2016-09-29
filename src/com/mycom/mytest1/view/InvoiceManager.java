@@ -35,7 +35,9 @@ import javax.swing.table.DefaultTableModel;
  * @author kaushika
  */
 public class InvoiceManager extends javax.swing.JPanel {
-
+    static boolean f = true;
+     //private static final Logger logger=Logger.getLogger(InvoiceManager.class);
+     static org.apache.log4j.Logger logger=org.apache.log4j.Logger.getLogger(InvoiceManager.class);
     /**
      * Creates new form InvoiceManager
      */
@@ -499,6 +501,12 @@ public class InvoiceManager extends javax.swing.JPanel {
         jLabellInvoiceNumber1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabellInvoiceNumber1.setText("Invoice Number");
 
+        jTextFieldlInvoiceNumber1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldlInvoiceNumber1ActionPerformed(evt);
+            }
+        });
+
         jLabelInvoiceAddress.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelInvoiceAddress.setText("Address");
 
@@ -870,6 +878,14 @@ public class InvoiceManager extends javax.swing.JPanel {
     
    
     private void jButtonPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrintActionPerformed
+        
+        
+        
+        
+        String s = jTextFieldlInvoiceNumber1.getText();
+        int invoiceNumber=Integer.valueOf(s);
+        s=Integer.toString(++invoiceNumber);
+        jTextFieldlInvoiceNumber1.setText(s);
         Connection con;
         
         String invoice_number=jTextFieldlInvoiceNumber1.getText();
@@ -925,7 +941,20 @@ public class InvoiceManager extends javax.swing.JPanel {
                 String item_Name_JTable = (String) jTable1.getValueAt(i, 9);
                 String Category_id_JTable = (String) jTable1.getValueAt(i, 10);
                 int category_id1=jComboBoxCategory.getSelectedIndex();
-               
+                
+
+//***************** this few code should be include below of the ****************************
+                logger.info("GENERATE INVOICE BUTTON CALLED.........");
+                
+                removeAllDataFromJTable( jTable1);
+                jTextFieldTotal.setText("");
+                jTextFieldInvoiceContact.setText("");
+                jTextFieldCusName.setText("");
+                jTextFieldInvoiceAddress.setText("");
+ 
+//*******************************************************************************************               
+                
+                
 //                System.out.println(no+" "+description+" "+quantityJTable1+" "+unit_priceJTable1+" "+amount+" "+warranty+" "+IMEI_number+" "+model_JTable+" "+Brand_JTable+" "+item_Name_JTable+" "+Category_id_JTable);
 //                 System.out.println( invoice_number + " " + no + " "+ category_id +" " + category_id1+ " " +unit_priceJTable1 + " " + quantityJTable1+ " "+ warranty_type_code+" "+1);
 //                System.out.println("*************************************");
@@ -973,23 +1002,47 @@ public class InvoiceManager extends javax.swing.JPanel {
         con.commit();
         con.rollback();
        // PreparedStatement ps=con.prepareStatement(sql);
-        
+        removeAllDataFromJTable( jTable1);
     
         
         
         //ps.executeUpdate();
         
+        
         jTextFieldInvoiceNumber.setText("");
         jTextFieldCusName.setText("");
         jTextFieldInvoiceAddress.setText("");
         jTextFieldInvoiceContact.setText("");
+        DefaultTableModel model=(DefaultTableModel)this.jTable1.getModel();
+        model.setRowCount(0);
+        //model.setColumnCount(category_id);
+        
+        
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
+        
+        
     }//GEN-LAST:event_jButtonPrintActionPerformed
 
-
+    private void jTextFieldlInvoiceNumber1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldlInvoiceNumber1ActionPerformed
+        //jTextFieldlInvoiceNumber1
+    }//GEN-LAST:event_jTextFieldlInvoiceNumber1ActionPerformed
+// this method couldnt checked because column count error
+    public static void removeAllDataFromJTable(JTable jTable1) {
+     f=false;
+    int numberOfRows = jTable1.getRowCount();
+    int numberOfColumns = jTable1.getColumnCount();
+    int rowCounter = 0;
+    int columnCounter = 0;
+    //we will travel to every row and clean it
+    for (rowCounter = 0; rowCounter < numberOfRows; rowCounter++) {
+        for (columnCounter = 0; columnCounter < numberOfColumns; columnCounter++) {
+            jTable1.setValueAt(null, rowCounter, columnCounter);
+        }
+    }
+}
        
     
     

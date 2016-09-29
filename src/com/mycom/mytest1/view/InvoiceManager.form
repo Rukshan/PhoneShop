@@ -962,6 +962,9 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="jTextFieldlInvoiceNumber1">
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldlInvoiceNumber1ActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabelInvoiceAddress">
       <Properties>
